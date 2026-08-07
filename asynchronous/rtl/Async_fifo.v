@@ -80,7 +80,8 @@ module fifo_async #(
   // -------------------------------------------------------------------
   // Next-pointer combinational logic (use registered full/empty for gating)
   // -------------------------------------------------------------------
-  assign wbin_next = wr_bin + (wr_en & ~full);
+  assign wbin_next = wr_bin + (wr_en & ~full); // if (!full)
+                                             // wptr <= wptr + 1;
   assign wgnext    = bin2gray(wbin_next);
 
   assign rbin_next = rd_bin + (rd_en & ~empty);
