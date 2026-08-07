@@ -268,3 +268,46 @@ Verification performed via:
 
 This design represents the **canonical industry-standard FIFO architecture** for CDC applications.
 
+# 5.Misc
+### Why non-power-of-two depths are difficult in asynchronous FIFOs
+
+The issue is **not the pointer width**. Both `DEPTH=16` and `DEPTH=13` use:
+
+- `ASIZE = ceil(log2(DEPTH)) = 4`
+- 5-bit pointers (4 address bits + 1 wrap bit)
+
+The problem is the **pointer state space**.
+
+- **DEPTH = 16:** A 5-bit pointer naturally cycles through `32` states (`0..31`), and `2 × DEPTH = 32`. Binary overflow works naturally, and standard Gray coding preserves the **one-bit transition** property, even at wrap:
+
+```
+Binary : 11111 (31) -> 00000 (0)
+Gray   : 10000      -> 00000
+                  ^ Only one bit changes
+```
+
+- **DEPTH = 13:** A 5-bit pointer still cycles through `32` states, but only `2 × DEPTH = 26` states are valid (`0..25`). The pointer must be forced to wrap:
+
+```systemverilog
+if (ptr == 25)
+    ptr <= 0;
+else
+    ptr <= ptr + 1;
+```
+
+The forced wrap breaks the Gray-code property:
+
+```
+Binary : 11001 (25) -> 00000 (0)
+Gray   : 10101      -> 00000
+         ^ ^ ^
+         3 bits change
+```
+
+Since asynchronous FIFOs rely on **only one Gray-code bit changing between consecutive pointer values** for safe clock-domain crossing, the standard Gray-pointer synchronization no longer works.
+
+Hence, standard asynchronous FIFOs assume a **power-of-two depth**. For non-power-of-two depths, either:
+- allocate the next power-of-two memory and ignore the extra locations (industry standard), or
+- use a custom pointer encoding.
+
+
