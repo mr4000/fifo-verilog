@@ -84,7 +84,7 @@ module fifo_async #(
                                              // wptr <= wptr + 1;
   assign wgnext    = bin2gray(wbin_next);
 
-  wire wfull_next;
+  wire wfull_next,rempty_next ;
  assign wfull_next = (wgnext == {~wrptr_sync[P-1:P-2], wrptr_sync[P-3:0]});
   assign rempty_next = (rgnext == rwptr_sync);
 
