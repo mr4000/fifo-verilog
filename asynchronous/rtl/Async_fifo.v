@@ -86,6 +86,7 @@ module fifo_async #(
 
   wire wfull_next;
  assign wfull_next = (wgnext == {~wrptr_sync[P-1:P-2], wrptr_sync[P-3:0]});
+  assign rempty_next = (rgnext == rwptr_sync);
 
   assign rbin_next = rd_bin + (rd_en & ~empty);
   assign rgnext    = bin2gray(rbin_next);
@@ -155,7 +156,7 @@ module fifo_async #(
       rd_gray <= rgnext;
 
       // STA-friendly empty: compare next Gray pointer to synchronized remote write pointer
-      rempty_reg <= (rgnext == rwptr_sync);
+      rempty_reg <=rempty_next;
     end
   end
   assign empty = rempty_reg;
